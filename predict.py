@@ -70,7 +70,7 @@ def data_processing(dataframe,data,seed):
 
 def predict_by_DT(Model,x_test,y_test,seed):
     report = {}
-    loaded_model_DT = joblib.load(Model)
+    loaded_model_DT = Model
     start_time = time.time()
     predict_label = loaded_model_DT.predict(x_test)
     end_time = time.time()
@@ -86,10 +86,10 @@ def predict_by_DT(Model,x_test,y_test,seed):
     Standard_deviation = DS_test.std()
     Accuracy_score = DS_test.mean()
 
-    plt.figure(figsize=(10, 8))
-    heatmap = sns.heatmap(df_cm, annot=True, fmt="d", cmap="RdPu", linewidths=.5, cbar_kws={"shrink": 0.8})
-    heatmap.set_title("Confusion Matrix Heatmap use Decision Tree Classifier")
-    plt.show()
+    # plt.figure(figsize=(10, 8))
+    # heatmap = sns.heatmap(df_cm, annot=True, fmt="d", cmap="RdPu", linewidths=.5, cbar_kws={"shrink": 0.8})
+    # heatmap.set_title("Confusion Matrix Heatmap use Decision Tree Classifier")
+    # plt.show()
 
     report["Predictions"] = predict_label
     report["Confusion Matrix"] = conf_mat
@@ -104,7 +104,7 @@ def predict_by_DT(Model,x_test,y_test,seed):
 
 def predict_by_RF(Model,x_test,y_test,seed):
     report = {}
-    loaded_model_DT = joblib.load(Model)
+    loaded_model_DT = Model
     start_time = time.time()
     predict_label = loaded_model_DT.predict(x_test)
     end_time = time.time()
@@ -120,10 +120,10 @@ def predict_by_RF(Model,x_test,y_test,seed):
     Standard_deviation = DS_test.std()
     Accuracy_score = DS_test.mean()
 
-    plt.figure(figsize=(10, 8))
-    heatmap = sns.heatmap(df_cm, annot=True, fmt="d", cmap="Blues")
-    heatmap.set_title("Confusion Matrix Heatmap use Random Forest Classifier")
-    plt.show()
+    # plt.figure(figsize=(10, 8))
+    # heatmap = sns.heatmap(df_cm, annot=True, fmt="d", cmap="Blues")
+    # heatmap.set_title("Confusion Matrix Heatmap use Random Forest Classifier")
+    # plt.show()
 
     report["Predictions"] = predict_label
     report["Confusion Matrix"] = conf_mat
@@ -138,9 +138,13 @@ def predict_by_RF(Model,x_test,y_test,seed):
 
 
 def diagnose_disease(Model, df_symptom_severity, disease_description, disease_precaution,symptoms:list ):
+    temp = symptoms
+    symp_list = temp.copy()
+
     for i in range(17-len(symptoms)):
         symptoms.append(0)
     psymptoms = symptoms
+
     a = np.array(df_symptom_severity["Symptom"])
     b = np.array(df_symptom_severity["weight"])
 
@@ -159,6 +163,12 @@ def diagnose_disease(Model, df_symptom_severity, disease_description, disease_pr
 
     for i in range(1,len(disease_precaution.iloc[c])):
           precuation_list.append(disease_precaution.iloc[c,i])
+    
+    t = []
+    print(len(symp_list))
+    for i in range(len(symp_list)):
+        t.append((a.tolist())[symp_list[i]])
+    print(f"Your symptoms {t}")
     print("The Disease Name: ",pred2[0])
     print("The Disease Discription: ",disp)
     print("Recommended Things to do at home: ")
@@ -214,25 +224,27 @@ if __name__ == "__main__":
 
     x_train, x_test, y_train, y_test = train_test_split(features, labels, train_size=0.1, random_state=SEED)
 
-    print(type(x_test))
 
-    model_DT = "DescisionTreeModel.joblib"
-    model_RF = "RandomForestModel.joblib"
-    Model_descision_tree = predict_by_DT(model_DT,x_test,y_test,SEED)
-    Model_random_forest = predict_by_DT(model_RF,x_test,y_test,SEED)
+    model_DT = joblib.load("DescisionTreeModel.joblib")
+    model_RF = joblib.load("RandomForestModel.joblib")
+    # Model_descision_tree = predict_by_DT(model_DT,x_test,y_test,SEED)
+    # Model_random_forest = predict_by_DT(model_RF,x_test,y_test,SEED)
 
     sympList = df_symptom_severity["Symptom"].to_list()
 
     print("We can diagnose your disease based on your symptoms!")
     print("How many symptoms are you suffering from?")
     number_of_symptom = int(input("The number of symptoms you are suffering from: "))
-    list_symptoms = list(disease_description.get("Disease"))
+
+    list_symptoms = list(df_symptom_severity.get("Symptom"))
+
     for i in range(len(list_symptoms)):
         print(f"{i+1}. {list_symptoms[i]}")
     print("Choose your symptoms by the number of symptoms.")
+
     List_of_patient_symptoms = []
     for i in range(number_of_symptom):
-        List_of_patient_symptoms.append(int(input(f"Symptom {i+1}: ")))
+        List_of_patient_symptoms.append(int(input(f"Symptom {i+1}: "))-1)
 
     print(len(List_of_patient_symptoms))
-    diagnose_disease(Model_random_forest["Model"],df_symptom_severity, disease_description, disease_precaution,List_of_patient_symptoms)
+    diagnose_disease(model_RF,df_symptom_severity, disease_description, disease_precaution,List_of_patient_symptoms)
